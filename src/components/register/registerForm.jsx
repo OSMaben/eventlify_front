@@ -3,40 +3,39 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Lock, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { FormInput } from './ui/FormInput';
-import { Modal } from './ui/Modal';
+import { useDispatch, useSelector } from 'react-redux';
+import { FormInput } from '../register/ui/FormInput';
+import { Modal } from '../register/ui/Modal';
 import { registerSchema } from '../../lib/validation';
-import { useRegisterMutation } from '../../lib/api/authApi';
-import { useDispatch } from 'react-redux';
-import { setCredentials } from '../../lib/store/slices/authSlice';
+import { registerUser, selectError, selectIsLoading } from '../../lib/store/slices/authSlice';
 
 export function RegisterForm() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
-  const [register, { isLoading }] = useRegisterMutation();
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
 
   const {
-    register: registerField,
+    register,
     handleSubmit,
     formState: { errors },
-    setError,
+    setError
   } = useForm({
     resolver: zodResolver(registerSchema)
   });
 
   const onSubmit = async (data) => {
     try {
-      const result = await register(data).unwrap();
-      dispatch(setCredentials(result));
-      setShowModal(true);
-    } catch (error) {
-      if (error.status === 422) {
-        Object.entries(error.data.errors).forEach(([field, message]) => {
+      const resultAction = await dispatch(registerUser(data));
+      if (registerUser.fulfilled.match(resultAction)) {
+        setShowModal(true);
+      }
+    } catch (err) {
+      if (err.status === 422) {
+        Object.entries(err.data.errors).forEach(([field, message]) => {
           setError(field, { type: 'server', message });
         });
-      } else {
-        console.error('Registration failed:', error);
       }
     }
   };
@@ -55,7 +54,7 @@ export function RegisterForm() {
           type="text"
           icon={<User className="h-5 w-5" />}
           error={errors.username?.message}
-          {...registerField('username')}
+          {...register('username')}
         />
 
         <FormInput
@@ -64,7 +63,7 @@ export function RegisterForm() {
           type="email"
           icon={<Mail className="h-5 w-5" />}
           error={errors.email?.message}
-          {...registerField('email')}
+          {...register('email')}
         />
 
         <FormInput
@@ -73,7 +72,7 @@ export function RegisterForm() {
           type="password"
           icon={<Lock className="h-5 w-5" />}
           error={errors.password?.message}
-          {...registerField('password')}
+          {...register('password')}
         />
 
         <FormInput
@@ -83,8 +82,12 @@ export function RegisterForm() {
           icon={<Phone className="h-5 w-5" />}
           placeholder="+1234567890"
           error={errors.phone?.message}
-          {...registerField('phone')}
+          {...register('phone')}
         />
+
+        {error && (
+          <div className="text-red-600 text-sm">{error}</div>
+        )}
 
         <button
           type="submit"

@@ -3,41 +3,43 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginSchema } from '../lib/validation';
+import { loginUser, selectIsLoading, selectError } from '../lib/store/slices/authSlice';
 import { FormInput } from '../components/register/ui/FormInput';
 import { Modal } from '../components/register/ui/Modal';
-import { loginSchema } from '../lib/validation';
-import { useLoginMutation } from '../lib/api/authApi';
-import { useDispatch } from 'react-redux';
-import { setCredentials } from '../lib/store/slices/authSlice';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const isLoading = useSelector(selectIsLoading); // Selector for loading state
+  const error = useSelector(selectError); // Selector for error state
   const [showModal, setShowModal] = useState(false);
-  const [login, { isLoading }] = useLoginMutation();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setError
+    setError,
   } = useForm({
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data) => {
-    try {
-      const result = await login(data).unwrap();
-      dispatch(setCredentials(result));
+    const result = await dispatch(loginUser(data));
+
+    if (loginUser.fulfilled.match(result)) {
+      // Login successful
       setShowModal(true);
-    } catch (error) {
-      if (error.status === 401) {
+    } else if (loginUser.rejected.match(result)) {
+      // Handle errors from Redux
+      if (result.payload === 'Invalid credentials') {
         setError('password', {
           type: 'server',
-          message: 'Invalid email or password'
+          message: 'Invalid email or password',
         });
       } else {
-        console.error('Login failed:', error);
+        console.error('Login failed:', result.payload);
       }
     }
   };
@@ -61,7 +63,6 @@ export function LoginPage() {
             </Link>
           </p>
         </div>
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <FormInput
             id="email"
@@ -71,7 +72,6 @@ export function LoginPage() {
             error={errors.email?.message}
             {...register('email')}
           />
-
           <FormInput
             id="password"
             label="Password"
@@ -80,7 +80,6 @@ export function LoginPage() {
             error={errors.password?.message}
             {...register('password')}
           />
-
           <button
             type="submit"
             disabled={isLoading}
@@ -88,8 +87,8 @@ export function LoginPage() {
           >
             {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </form>
-
         <Modal
           isOpen={showModal}
           onClose={handleModalClose}

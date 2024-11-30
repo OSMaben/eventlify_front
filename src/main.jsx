@@ -10,7 +10,7 @@ if (!rootElement) throw new Error('Failed to find the root element');
 
 createRoot(rootElement).render(
   <StrictMode>
-    <Provider store={store}>
+    <Provider store={store}>  
       <App />
     </Provider>
   </StrictMode>

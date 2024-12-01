@@ -13,6 +13,39 @@ import ModalUpate from "./Modal"
 
 export default function MainBody() {
 
+    const [events, setEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [errors, setErrors] = useState(null);
+    const token = localStorage.getItem('token');
+
+    const fetchEvents = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get('http://localhost:3000/events', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setEvents(response.data);
+        } catch (err) {
+            console.error("Error:", err);
+            setErrors(err.message || "Something went wrong");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchEvents();
+    }, []);
+
+    const addNewEvent = (newEvent) => {
+        setEvents(prevEvents => [...prevEvents, newEvent]);
+    };
+
+    const deleteEvent = (eventId) => {
+        setEvents(prevEvents => prevEvents.filter(event => event._id !== eventId));
+    };
+
+
     return (
         <>
         <Toaster
@@ -33,10 +66,17 @@ export default function MainBody() {
 
                             <Analytics />
                             <Graphics />
-                        </div>
-                        <ModalUpate/>
-                        
-                            <TableOfContent/>    
+                        </div>  
+                        <ModalUpate 
+                            addNewEvent={addNewEvent} 
+                            token={token}
+                        />
+                        <TableOfContent 
+                            events={events} 
+                            loading={loading} 
+                            errors={errors}
+                            deleteEvent={deleteEvent}
+                        />
 
                     </section>
                 </div>

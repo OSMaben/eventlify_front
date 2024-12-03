@@ -11,7 +11,7 @@ export default function ParticipantsModal({ eventId }) {
         username: '',
         email: '',
         phone: '',
-        role :''
+        
     });
     const [loading, setLoading] = useState(false);
 
@@ -21,7 +21,7 @@ export default function ParticipantsModal({ eventId }) {
             const response = await axios.get(`http://localhost:3000/events/MembersEvents/${eventId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setParticipants(response.data);
+            setParticipants(response.data.users);
             console.log('sss', response.data)
         } catch (err) {
             console.error("Error fetching participants:", err);
@@ -46,7 +46,7 @@ export default function ParticipantsModal({ eventId }) {
             setParticipants([...participants, response.data]);
             
             // Reset form
-            setNewParticipant({ name: '', email: '', phone: '', role: '' });
+            setNewParticipant({ username: '', email: '', phone: ''});
             
             toast.success('Participant added successfully!');
         } catch (err) {
@@ -57,7 +57,7 @@ export default function ParticipantsModal({ eventId }) {
 
     const handleRemoveParticipant = async (participantId) => {
         try {
-            await axios.post(
+            await axios.delete(
                 `http://localhost:3000/events/${eventId}/RemoveParticipants/${participantId}`,
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -141,6 +141,21 @@ export default function ParticipantsModal({ eventId }) {
                                             required
                                         />
                                     </div>
+
+                                    <div>
+                                        <label for="Phone" className="block mb-2 text-sm font-medium">
+                                            phone
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="phone"
+                                            value={newParticipant.phone}
+                                            onChange={(e) => setNewParticipant({...newParticipant, phone: e.target.value})}
+                                            className="bg-gray-50 border rounded-lg block w-full p-2.5"
+                                            placeholder="Participant phone"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                                 <button 
                                     type="submit" 
@@ -162,25 +177,27 @@ export default function ParticipantsModal({ eventId }) {
                                         <thead>
                                             <tr>
                                                 <th className="border p-2">Name</th>
+                                                <th className="border p-2">phone</th>
                                                 <th className="border p-2">Email</th>
                                                 <th className="border p-2">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {participants.map((participant) => (
-                                                <tr key={participant._id}>
-                                                    <td className="border p-2">{participant.name}</td>
-                                                    <td className="border p-2">{participant.email}</td>
-                                                    <td className="border p-2 text-center">
-                                                        <button 
-                                                            onClick={() => handleRemoveParticipant(participant._id)}
-                                                            className="text-red-500 hover:bg-red-100 p-2 rounded"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                {participants.map((participant) => (
+                                                    <tr key={participant._id}>
+                                                        <td className="border p-2">{participant.username}</td>
+                                                        <td className="border p-2">{participant.email}</td>
+                                                        <td className="border p-2">{participant.phone}</td>
+                                                        <td className="border p-2 text-center">
+                                                            <button 
+                                                                onClick={() => handleRemoveParticipant(participant._id)}
+                                                                className="text-red-500 hover:bg-red-100 p-2 rounded"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
                                         </tbody>
                                     </table>
                                 )}

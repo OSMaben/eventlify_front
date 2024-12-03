@@ -103,7 +103,7 @@ export default function TableOfContent({ events, loading, errors, deleteEvent })
                                 <td className="p-4 border-b border-blue-gray-50">{event.name}</td>
                                 <td className="p-4 border-b border-blue-gray-50">
                                     <img
-                                        src={event.image || 'default-image.jpg'}
+                                        src="https://www.eventbookings.com/wp-content/uploads/2024/01/Different-Types-of-Events-in-2024-Which-is-Right-for-You.jpg"
                                         alt={event.name}
                                         className="rounded-md w-9 h-9 object-cover"
                                     />
